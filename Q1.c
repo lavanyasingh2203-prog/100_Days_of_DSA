@@ -1,120 +1,88 @@
-// A collage maintains a student re-evalutation request list. Each request contains SAP ID, Subjcet code, and marks obtained. Write a C program using a singly linked list to:
-//1. insert a new request such that if marks are less than 20, the node is inserted at the beginning; otherwise it is inserted at the end.
-//2. reject duplicate requests havinf the same SAP ID and Subject code.
-//3. Display all valid requests.
-//4. Display the total number of valid requests and duplicate requests rejected.
-//5. Delete all requests where marks obtained are exactly 0.
+// WAP to implement hashing technique :
+// 1) Insert
+// 2) Search
+// 3) Delete
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-struct Request {
-    char sap_id[20];
-    char subject_code[10];
-    int marks;
-    struct Request* next;
-};
+#define SIZE 10
+#define EMPTY -1
 
-struct Request* head = NULL;
-int total_valid_requests = 0;
-int total_duplicate_requests = 0;
+int hashTable[SIZE];
 
-void insert_request(char* sap_id, char* subject_code, int marks) {
-    
-    struct Request* temp = head;
-
-    // Check duplicate
-    while (temp != NULL) {
-        if (strcmp(temp->sap_id, sap_id) == 0 &&
-            strcmp(temp->subject_code, subject_code) == 0) {
-            total_duplicate_requests+= 1;
-            return;
-        }
-        temp = temp->next;
+// Initialize hash table
+void initialize() {
+    for (int i = 0; i < SIZE; i++) {
+        hashTable[i] = EMPTY;
     }
+}
 
-    // Create new node
-    struct Request* new_request = (struct Request*)malloc(sizeof(struct Request));
-    strcpy(new_request->sap_id, sap_id);
-    strcpy(new_request->subject_code, subject_code);
-    new_request->marks = marks;
-    new_request->next = NULL;
+// Hash function
+int hashFunction(int key) {
+    return key % SIZE;
+}
 
-    // Insert
-    if (marks < 20) {
-        new_request->next = head;
-        head = new_request;
+// INSERT (No collision handling)
+void insert(int key) {
+    int index = hashFunction(key);
+
+    if (hashTable[index] == EMPTY) {
+        hashTable[index] = key;
+        printf("Inserted %d at index %d\n", key, index);
     } else {
-        if (head == NULL) {
-            head = new_request;
-        } else {
-            temp = head;
-            while (temp->next != NULL)
-                temp = temp->next;
-            temp->next = new_request;
-        }
-    }
-    total_valid_requests+= 1;
-}
-
-void display_requests() {
-    struct Request* temp = head;
-    while (temp != NULL) {
-        printf("SAP ID: %s, Subject Code: %s, Marks: %d\n",
-               temp->sap_id, temp->subject_code, temp->marks);
-        temp = temp->next;
+        printf("Collision occurred! Cannot insert %d\n", key);
     }
 }
 
-void delete_zero_mark_requests() {
-    struct Request* temp = head;
-    struct Request* prev = NULL;
+// SEARCH
+int search(int key) {
+    int index = hashFunction(key);
 
-    while (temp != NULL) {
-        if (temp->marks == 0) {
-            if (prev == NULL) {
-                head = temp->next;
-            } else {
-                prev->next = temp->next;
-            }
-            free(temp);
-            temp = (prev == NULL) ? head : prev->next;
-        } else {
-            prev = temp;
-            temp = temp->next;
-        }
+    if (hashTable[index] == key) {
+        return index;
+    }
+
+    return -1;
+}
+
+// DELETE
+void deleteKey(int key) {
+    int index = hashFunction(key);
+
+    if (hashTable[index] == key) {
+        hashTable[index] = EMPTY;
+        printf("Deleted %d\n", key);
+    } else {
+        printf("Element not found\n");
     }
 }
 
+// DISPLAY
+void display() {
+    for (int i = 0; i < SIZE; i++) {
+        if (hashTable[i] == EMPTY)
+            printf("Empty ");
+        else
+            printf("%d ", hashTable[i]);
+    }
+    printf("\n");
+}
+
+// MAIN
 int main() {
-    int n;
-    char sap_id[20], subject_code[10];
-    int marks;
+    initialize();
 
-    printf("Enter number of requests: ");
-    scanf("%d", &n);
+    insert(5);
+    insert(15);  // Collision with 5
+    insert(25);  // Collision again
 
-    for (int i = 0; i < n; i++) {
-        printf("Enter SAP ID, Subject Code, and Marks: ");
-        scanf("%s %s %d", sap_id, subject_code, &marks);
-        insert_request(sap_id, subject_code, marks);
-    }
+    display();
 
-    printf("\nValid Requests:\n");
-    display_requests();
+    printf("Search 5: %d\n", search(5));
+    printf("Search 15: %d\n", search(15));
 
-    printf("\nTotal valid requests: %d\n", total_valid_requests);
-    printf("Total duplicate requests rejected: %d\n", total_duplicate_requests);
-
-    delete_zero_mark_requests();
-
-    printf("\nRequests after deleting zero mark requests:\n");
-    display_requests();
+    deleteKey(5);
+    display();
 
     return 0;
-}
-
-
-
-
+} 
